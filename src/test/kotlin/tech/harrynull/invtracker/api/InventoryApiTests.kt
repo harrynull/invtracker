@@ -8,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
-import tech.harrynull.invtracker.persistence.DbItemRepo
 import tech.harrynull.invtracker.proto.InventoryItem
 import tech.harrynull.invtracker.proto.SearchOptions
 import javax.transaction.Transactional
@@ -66,8 +65,15 @@ class InventoryApiTests {
         assertThat(
             inventoryApi.listInventoryItems(SearchOptions(showInactive = null, outOfStockOnly = true)).map { it.sku })
             .isEmpty()
+
+        // test exporting
         val export = inventoryApi.exportCsv(response = MockHttpServletResponse())
-        assertThat(export).isEqualTo("")
+        assertThat(export).isEqualTo(
+            """
+            SKU,Active,Quantity,Title,Description,Price
+            "testSku","false","0","test item","","10"
+            "testSku2","true","10","test item2","test description2","10"
+        """.trimIndent())
     }
 
     @Test
