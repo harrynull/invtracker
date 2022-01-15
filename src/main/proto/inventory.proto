@@ -1,0 +1,15 @@
+package tech.harrynull.invtracker.proto;
+
+message InventoryItem {
+  optional string sku = 1; // unique identifier of the item
+  optional string title = 2;
+  optional string description = 3;
+  optional int32 quantity = 4;
+  optional int32 priceCents = 5;
+  optional bool active = 6;
+}
+
+message SearchOptions {
+  optional bool showInactive = 1; // include inactive items, default false
+  optional bool outOfStockOnly = 2; // show out of stock items only, default false
+}
