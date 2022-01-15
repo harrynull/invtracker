@@ -1,0 +1,33 @@
+code {
+    font-family: monospace;
+}
+
+body {
+    background-color: #EEEEEE;
+    font-size: 1.2rem;
+    padding: 50px 200px;
+}
+
+.image {
+    display: flex;
+    padding: 10px;
+}
+
+.info {
+    padding-left: 10px;
+    float: right;
+}
+
+.image img {
+    width: 200px;
+    height: 200px;
+}
+
+.image a {
+    margin: 10px;
+}
+
+h1 {
+    font-family: monospace;
+    color: blueviolet;
+}
