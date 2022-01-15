@@ -6,13 +6,24 @@ import tech.harrynull.invtracker.persistence.DbItem
 import tech.harrynull.invtracker.persistence.DbItemRepo
 import tech.harrynull.invtracker.proto.InventoryItem
 import tech.harrynull.invtracker.proto.SearchOptions
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import javax.servlet.http.HttpServletResponse
 
 @RestController
 class InventoryApi(
     private val dbItemRepo: DbItemRepo,
 ) {
-    @PostMapping("/inventory/create")
-    fun createItem(@RequestParam("item") item: InventoryItem): ResponseEntity<Boolean> {
+    @PostMapping("/inventory")
+    fun createItem(@RequestBody item: InventoryItem): ResponseEntity<Boolean> {
+        val sku = item.sku ?: throw IllegalArgumentException("sku not provided")
+        // prevent sku == list because /list is used as an endpoint
+        // not a super elegant solution though.
+        if (sku == "list") throw IllegalArgumentException("sku cannot be named list")
+        if (dbItemRepo.findBySku(sku) != null) {
+            throw IllegalArgumentException("Item with sku ${item.sku} already existed.")
+        }
         dbItemRepo.save(DbItem.create(item))
         return ResponseEntity.ok(true)
     }
@@ -22,6 +33,23 @@ class InventoryApi(
         return dbItemRepo.findBySku(sku)?.toProto()
     }
 
+    @GetMapping("/export_csv", produces = ["text/csv"])
+    fun exportCsv(response: HttpServletResponse): String {
+        val items = dbItemRepo.findAll()
+        val header = listOf("SKU", "Active", "Quantity", "Title", "Description", "Price").joinToString(",")
+        val rows =
+            items.joinToString("\n") {
+                listOf(it!!.sku, it.active, it.quantity, it.title, it.description, it.priceCents / 100).map {
+                    '"' + it.toString().replace("\"", "\\\"") + '"' // escape " and wrap with ""
+                }.joinToString(",")
+            }
+
+        val currentDate = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT)
+        response.setHeader("Content-disposition", "attachment; filename=inventory_$currentDate.csv")
+
+        return header + "\n" + rows
+    }
+
     @DeleteMapping("/inventory/{sku}")
     fun deleteItem(@PathVariable sku: String): ResponseEntity<Boolean> {
         val dbItem = dbItemRepo.findBySku(sku) ?: return ResponseEntity.notFound().build()
@@ -29,8 +57,8 @@ class InventoryApi(
         return ResponseEntity.ok(true)
     }
 
-    @GetMapping("/inventory/")
-    fun listInventoryItems(@RequestParam("options") options: SearchOptions?): List<InventoryItem> {
+    @PostMapping("/list_inventory") // must be post because it has body
+    fun listInventoryItems(@RequestBody options: SearchOptions?): List<InventoryItem> {
         val items = if (options?.showInactive == true) {
             dbItemRepo.findAll()
         } else {
@@ -44,7 +72,7 @@ class InventoryApi(
     @PostMapping("/inventory/{sku}")
     fun editItem(
         @PathVariable sku: String,
-        @RequestParam("item") item: InventoryItem
+        @RequestBody item: InventoryItem
     ): ResponseEntity<Boolean> {
         val dbItem = dbItemRepo.findBySku(sku) ?: return ResponseEntity.notFound().build()
 
@@ -58,10 +86,10 @@ class InventoryApi(
         return ResponseEntity.ok(true)
     }
 
-    @PostMapping("/inventory/{sku}/quantity")
+    @PostMapping("/inventory/{sku}/quantity_delta")
     fun quantityChange(
         @PathVariable sku: String,
-        @RequestParam("delta") delta: Int
+        @RequestBody delta: Int
     ): ResponseEntity<Boolean> {
         // we allow negative quantity items since they are
         // possible in real-time due to some cross-platform desync

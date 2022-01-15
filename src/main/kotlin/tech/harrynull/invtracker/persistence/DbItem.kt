@@ -7,8 +7,6 @@ import javax.persistence.*
 @Table(
     name = "items", indexes = [
         Index(name = "idx_sku", columnList = "sku"),
-        Index(name = "idx_title", columnList = "title"),
-        Index(name = "idx_quantity", columnList = "quantity"),
     ]
 )
 data class DbItem(

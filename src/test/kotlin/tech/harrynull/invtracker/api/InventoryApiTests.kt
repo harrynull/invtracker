@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import tech.harrynull.invtracker.persistence.DbItemRepo
@@ -21,7 +22,7 @@ class InventoryApiTests {
     private lateinit var inventoryApi: InventoryApi
 
     @Test
-    fun `can create and get items`() {
+    fun `can create get list and export items`() {
         // First create 2 items
         inventoryApi.createItem(
             InventoryItem(
@@ -65,6 +66,8 @@ class InventoryApiTests {
         assertThat(
             inventoryApi.listInventoryItems(SearchOptions(showInactive = null, outOfStockOnly = true)).map { it.sku })
             .isEmpty()
+        val export = inventoryApi.exportCsv(response = MockHttpServletResponse())
+        assertThat(export).isEqualTo("")
     }
 
     @Test
