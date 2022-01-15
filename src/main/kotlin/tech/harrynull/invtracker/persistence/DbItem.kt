@@ -45,8 +45,11 @@ data class DbItem(
                 sku = item.sku ?: throw IllegalArgumentException("sku cannot be null"),
                 title = item.title ?: throw IllegalArgumentException("title cannot be null"),
                 description = item.description ?: "",
-                quantity = item.quantity?.takeIf { it > 0 } ?: throw IllegalArgumentException("quantity illegal"),
-                priceCents = item.priceCents ?: throw IllegalArgumentException("price cannot be null")
+                quantity = item.quantity?.takeIf { it >= 0 }
+                    ?: throw IllegalArgumentException("quantity cannot be null or negative"),
+                priceCents = item.priceCents?.takeIf { it >= 0 }
+                    ?: throw IllegalArgumentException("price cannot be null or negative"),
+                active = item.active ?: true
             )
         }
     }

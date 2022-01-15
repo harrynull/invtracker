@@ -17,7 +17,7 @@ It implements the following features:
    .
 4. Comprehensive [tests](https://github.com/harrynull/invtracker/blob/master/src/test/kotlin/tech/harrynull/invtracker/)
 5. A quick and dirty frontend so you don't have to use command lines to test its functionality.
-6. Hacked together in one day!
+6. Hacked together in two hours!
 
 Written with Kotlin, Springboot, MySQL, protobuf
 
